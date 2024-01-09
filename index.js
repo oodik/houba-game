@@ -66,6 +66,9 @@ app.post('/game', bodyParser, (req, res) => {
 
 app.post('/clear', bodyParser, (req, res) => {
     players = []
+    gamePhase = 0
+    gameStartedAt = 0
+    gameStoppededAt = 0
     res.send("cleared")
 
 });
