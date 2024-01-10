@@ -18,7 +18,7 @@ let gameStoppededAt = 0;
 // objekt hráče má i parametr vyřazen. Pokud dojde čas, server přepíše parametr na true. Pokud bude aktivní mód na teamy, bude existovat i seznam teamů a hráčů v něm. server bude kontrolovat parametr vyřazen u hráčů a přepíše ho následně celému teamu
 
 app.get('/', (req, res) => {
-    res.send(players);
+    res.send("v1.9");
 });
 
 
