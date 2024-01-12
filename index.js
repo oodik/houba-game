@@ -64,30 +64,22 @@ app.post('/game', bodyParser, (req, res) => {
 });
 
 
-app.post('/clear', bodyParser, (req, res) => {
-    players = []
-    gamePhase = 0
-    gameStartedAt = 0
-    gameStoppededAt = 0
-    res.send("cleared")
-
-});
-
-
-
 app.post('/send-time', bodyParser, (req, res) => {    let myId = req.body.myId
     let targetId = req.body.targetId
+    let myId1 = req.body.myId
     let myTime
     let targetTime = getTimeById(players, targetId) - Date.now()
     let sendTime = req.body.quantityOdTime * 60000
     if ((sendTime > 0) && (targetTime > 0)) {
         if (myId !== "bank") { // pokud posílá hráč
-            myTime = getTimeById(players, req.body.myId) - Date.now() // zjisti můj čas
-            if (myTime > sendTime) { // mám dost času?
+            myTime = getTimeById(players, myId1) - Date.now() // zjisti můj čas
+            if ((myTime > sendTime) && (myId1 !== targetId)) { // mám dost času?
                 players = performTimeOperation(players, myId, sendTime, "minus")
+                players = performTimeOperation(players, targetId, sendTime, "plus")
             }
+        } else { // pokud banka
+            players = performTimeOperation(players, targetId, sendTime, "plus")
         }
-        players = performTimeOperation(players, targetId, sendTime, "plus")
     }
     res.send(req.body)
 });
@@ -127,6 +119,14 @@ app.get('/admin-stop', (req, res) => {
         gameStoppededAt = Date.now()
     }
     res.send({});
+});
+app.get('/admin-new', bodyParser, (req, res) => {
+    players = []
+    gamePhase = 0
+    gameStartedAt = 0
+    gameStoppededAt = 0
+    res.send({})
+
 });
 
 
