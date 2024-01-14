@@ -4,7 +4,18 @@ const port = 8080;
 //const Joi = require('joi');
 bodyParser = require('body-parser').json();
 const cors = require('cors');
-app.use(cors());
+app.use((req, res, next) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader(
+        "Access-Control-Allow-Methods",
+        "OPTIONS, GET, POST, PUT, PATCH, DELETE"
+      );
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+      }
+      next();
+    });
 
 players = []
 config = { defaultTime: 640000 }
