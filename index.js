@@ -18,7 +18,7 @@ app.use((req, res, next) => {
     });
 
 players = []
-config = { defaultTime: 640000 }
+config = { defaultTime: 740000 }
 let gamePhase = 0;
 let gameStartedAt = 0;
 let gameStoppededAt = 0;
@@ -29,7 +29,7 @@ let gameStoppededAt = 0;
 // objekt hráče má i parametr vyřazen. Pokud dojde čas, server přepíše parametr na true. Pokud bude aktivní mód na teamy, bude existovat i seznam teamů a hráčů v něm. server bude kontrolovat parametr vyřazen u hráčů a přepíše ho následně celému teamu
 
 app.get('/', (req, res) => {
-    res.send("v2.1");
+    res.send(["v2.5"]);
 });
 
 
@@ -45,7 +45,7 @@ app.post('/add-me', bodyParser, (req, res) => {
 
         res.send({ id: x.id, path: "/game", nickname: x.nickname });    //React ho zapíše do localstorage 
     } else {
-        res.send({});
+        res.send("error");
     }
 });
 
@@ -75,24 +75,30 @@ app.post('/game', bodyParser, (req, res) => {
 });
 
 
-app.post('/send-time', bodyParser, (req, res) => {    let myId = req.body.myId
+app.post('/send-time', bodyParser, (req, res) => {    
+    let myId = req.body.myId
     let targetId = req.body.targetId
     let myId1 = req.body.myId
     let myTime
     let targetTime = getTimeById(players, targetId) - Date.now()
     let sendTime = req.body.quantityOdTime * 60000
-    if ((sendTime > 0) && (targetTime > 0)) {
+    let access = 0;
+
         if (myId !== "bank") { // pokud posílá hráč
+            if ((sendTime > 0) && (targetTime > 0)) {
             myTime = getTimeById(players, myId1) - Date.now() // zjisti můj čas
             if ((myTime > sendTime) && (myId1 !== targetId)) { // mám dost času?
-                players = performTimeOperation(players, myId, sendTime, "minus")
-                players = performTimeOperation(players, targetId, sendTime, "plus")
+                players = performTimeOperationPlayer(players, myId, sendTime, "minus")
+                players = performTimeOperationPlayer(players, targetId, sendTime, "plus")
+                access = 1;
             }
-        } else { // pokud banka
-            players = performTimeOperation(players, targetId, sendTime, "plus")
         }
-    }
-    res.send(req.body)
+            } else if ((targetTime > 0)) { // pokud banka
+            players = performTimeOperationPlayer(players, targetId, sendTime, "plus")
+            access = 1;
+        }
+    
+    res.send({"access": access, "date": Date.now()})
 });
 
 app.post('/my-result', bodyParser, (req, res) => {
@@ -140,12 +146,17 @@ app.get('/admin-new', bodyParser, (req, res) => {
 
 });
 
+app.post('/admin-time', bodyParser, (req, res) => {
+
+    players = performTimeOperationAdmin(players, req.body.quantityOdTime)
+    res.send({});
+});
 
 function setAllPlayersTime(obj, newTimeValue) {
     return obj.map(obj => ({ ...obj, time: Date.now() + newTimeValue }))
 }
 
-function performTimeOperation(array, targetId, number, operator) {
+function performTimeOperationPlayer(array, targetId, number, operator) {
     const modifiedArray = array.map(obj => {
         if (obj.id === targetId) {
             if (operator === 'plus') {
@@ -160,6 +171,17 @@ function performTimeOperation(array, targetId, number, operator) {
     return modifiedArray;
 }
 
+function performTimeOperationAdmin(array, number) {
+    return array.map(obj => {
+        const timeDifference = obj.time - Date.now();
+    
+        // Přičíst číslo pouze pokud je původní hodnota - Date.now() kladné číslo
+        const newTime = timeDifference > 0 ? obj.time + number : obj.time;
+    
+        return { ...obj, time: newTime };
+      });
+    
+  }
 // funkce vytvoří kopii pole hráčů, ale změní vlastnosti čas na pevné hodnoty. Reactu se bude muset říct, aby od hodnot neodečítal Date.now(). Ta se použije k vyhodnocení
 
 app.listen(port, () => console.log("Listening on port " + port + "..."));
